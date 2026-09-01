@@ -358,6 +358,41 @@
   cursor: pointer;
 }
 
+.alpha-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 12px;
+  border-radius: 9999px;
+  outline: none;
+  background:
+    linear-gradient(90deg, rgb(11 23 48 / 0.08), rgb(11 23 48 / 0.96)),
+    repeating-conic-gradient(#8a96a8 0% 25%, #0b1730 0% 50%) 0 0 / 10px 10px;
+  box-shadow: 0 0 0 1px rgb(232 238 246 / 0.12);
+}
+
+.alpha-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #e8eef6;
+  border: 0;
+  box-shadow: 0 0 0 1px rgb(5 6 10 / 0.4);
+  cursor: pointer;
+}
+
+.alpha-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #e8eef6;
+  border: 0;
+  box-shadow: 0 0 0 1px rgb(5 6 10 / 0.4);
+  cursor: pointer;
+}
+
 .notes-editor {
   width: 100%;
   min-height: 0;

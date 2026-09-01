@@ -6,7 +6,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { ChevronDown, ChevronRight, X } from "lucide-react";
-import { HueSlider } from "@/components/overlay/ColorPicker";
+import { HueSlider, TransparencySlider } from "@/components/overlay/ColorPicker";
 import { hexToHue, hueToHex } from "@/lib/color";
 import { NODE_BY_ID } from "@/lib/nodes";
 import {
@@ -167,6 +167,7 @@ function NodeWindow({
         height: seed.h,
         borderRadius: Math.min(seed.w, seed.h) / 2,
         boxShadow: `0 0 0 1px color-mix(in oklab, ${accent} 35%, rgb(232 238 246 / 0.12)), 0 28px 80px rgb(0 0 0 / 0.5), inset 0 1px 0 rgb(255 255 255 / 0.14)`,
+        background: `rgb(11 23 48 / ${saved.opacity})`,
       }}
       onPointerDown={(e) => e.stopPropagation()}
     >
@@ -268,11 +269,17 @@ function NodeWindow({
             )}
           </button>
           {colorOpen ? (
-            <div className="px-1 pt-2 pb-1">
+            <div className="flex flex-col gap-2 px-1 pt-2 pb-1">
               <HueSlider
                 hue={hue}
                 onChange={(next) => {
                   patchNode(openId, { color: hueToHex(next) });
+                }}
+              />
+              <TransparencySlider
+                opacity={saved.opacity}
+                onChange={(next) => {
+                  patchNode(openId, { opacity: next });
                 }}
               />
             </div>

@@ -17,3 +17,23 @@ export function HueSlider({
     />
   );
 }
+
+export function TransparencySlider({
+  opacity,
+  onChange,
+}: {
+  opacity: number;
+  onChange: (opacity: number) => void;
+}) {
+  return (
+    <input
+      type="range"
+      min={8}
+      max={96}
+      value={Math.round(opacity * 100)}
+      onChange={(e) => onChange(Number(e.target.value) / 100)}
+      className="alpha-range"
+      aria-label="Window transparency"
+    />
+  );
+}

@@ -12,12 +12,24 @@ export type NodeMeta = {
   title: string;
   color: string | null;
   notes: string;
+  opacity: number;
 };
 
 const META_KEY = "nexus-node-meta-v1";
 const SIZE_KEY = "nexus-sphere-size";
+const DEFAULT_OPACITY = 0.5;
 
-const emptyMeta = (): NodeMeta => ({ title: "", color: null, notes: "" });
+function clampOpacity(n: number) {
+  if (!Number.isFinite(n)) return DEFAULT_OPACITY;
+  return Math.max(0.08, Math.min(0.96, n));
+}
+
+const emptyMeta = (): NodeMeta => ({
+  title: "",
+  color: null,
+  notes: "",
+  opacity: DEFAULT_OPACITY,
+});
 
 function loadMeta(): Record<string, NodeMeta> {
   if (typeof window === "undefined") return {};
@@ -31,6 +43,9 @@ function loadMeta(): Record<string, NodeMeta> {
         title: value.title ?? "",
         color: value.color ?? null,
         notes: value.notes ?? "",
+        opacity: clampOpacity(
+          typeof value.opacity === "number" ? value.opacity : DEFAULT_OPACITY,
+        ),
       };
     }
     return out;
@@ -141,6 +156,9 @@ export const useNexus = create<NexusState>((set, get) => ({
       title,
       color,
       notes: partial.notes !== undefined ? partial.notes : prev.notes,
+      opacity: clampOpacity(
+        partial.opacity !== undefined ? partial.opacity : prev.opacity,
+      ),
     };
     const meta = { ...get().meta, [id]: next };
     persistMeta(meta);
