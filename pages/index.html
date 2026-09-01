@@ -2,7 +2,7 @@
 <html lang="en" class="antialiased">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Workstation</title>
     <meta
       name="description"
@@ -15,10 +15,16 @@
       #root {
         width: 100%;
         height: 100%;
+        height: 100svh;
         height: 100dvh;
         margin: 0;
         overflow: hidden;
         background: #05060a;
+      }
+      canvas {
+        display: block !important;
+        width: 100% !important;
+        height: 100% !important;
       }
     </style>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />

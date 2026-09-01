@@ -1,18 +1,62 @@
 import { Canvas, useThree } from "@react-three/fiber";
-import { useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
+import { PerspectiveCamera } from "three";
+import { SPHERE_RADIUS } from "@/lib/nodes";
 import { PALETTE } from "@/lib/palette";
 import { LiquidSky, WaveField } from "./LiquidWaves";
 import { NodeSphere } from "./NodeSphere";
 import { Starfield } from "./Starfield";
 
+function readDisplay() {
+  const vv = window.visualViewport;
+  return {
+    dpr: Math.min(3, Math.max(1, window.devicePixelRatio || 1)),
+    w: Math.max(1, Math.round(vv?.width ?? window.innerWidth)),
+    h: Math.max(1, Math.round(vv?.height ?? window.innerHeight)),
+  };
+}
+
+function useDisplay() {
+  const [display, setDisplay] = useState(readDisplay);
+  useEffect(() => {
+    const sync = () => setDisplay(readDisplay());
+    window.addEventListener("resize", sync);
+    window.addEventListener("orientationchange", sync);
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", sync);
+    vv?.addEventListener("scroll", sync);
+    return () => {
+      window.removeEventListener("resize", sync);
+      window.removeEventListener("orientationchange", sync);
+      vv?.removeEventListener("resize", sync);
+      vv?.removeEventListener("scroll", sync);
+    };
+  }, []);
+  return display;
+}
+
 function CameraRig() {
   const camera = useThree((s) => s.camera);
+  const gl = useThree((s) => s.gl);
   const width = useThree((s) => s.size.width);
+  const height = useThree((s) => s.size.height);
 
   useLayoutEffect(() => {
-    camera.position.set(0, 0.52, width < 640 ? 8.5 : 6.55);
-    camera.lookAt(0, -0.18, 0);
-  }, [camera, width]);
+    const dpr = Math.min(3, Math.max(1, window.devicePixelRatio || 1));
+    gl.setPixelRatio(dpr);
+    const cam = camera as PerspectiveCamera;
+    const aspect = width / Math.max(1, height);
+    cam.aspect = aspect;
+    cam.fov = 40;
+    const fit = SPHERE_RADIUS + 0.62;
+    const half = Math.tan((cam.fov * Math.PI) / 360);
+    const dist = (Math.max(fit, fit / aspect) / half) * 1.06;
+    cam.position.set(0, 0.42, dist);
+    cam.near = 0.1;
+    cam.far = Math.max(80, dist * 10);
+    cam.lookAt(0, -0.12, 0);
+    cam.updateProjectionMatrix();
+  }, [camera, gl, width, height]);
 
   return null;
 }
@@ -22,10 +66,13 @@ export function NexusCanvas({
 }: {
   onDraggingChange: (dragging: boolean) => void;
 }) {
+  const { dpr } = useDisplay();
+
   return (
     <Canvas
-      camera={{ position: [0, 0.52, 6.55], fov: 40, near: 0.1, far: 60 }}
-      dpr={[1, 1.5]}
+      camera={{ position: [0, 0.42, 6.55], fov: 40, near: 0.1, far: 80 }}
+      dpr={dpr}
+      resize={{ debounce: 0, scroll: false }}
       gl={{
         antialias: true,
         alpha: false,
@@ -35,6 +82,7 @@ export function NexusCanvas({
       }}
       onCreated={({ gl }) => {
         gl.setClearColor(PALETTE.black, 1);
+        gl.setPixelRatio(Math.min(3, Math.max(1, window.devicePixelRatio || 1)));
         const canvas = gl.domElement;
         canvas.addEventListener(
           "webglcontextlost",
@@ -44,7 +92,12 @@ export function NexusCanvas({
           false,
         );
       }}
-      style={{ touchAction: "none", height: "100%", width: "100%" }}
+      style={{
+        touchAction: "none",
+        width: "100%",
+        height: "100%",
+        display: "block",
+      }}
     >
       <color attach="background" args={[PALETTE.black]} />
       <fog attach="fog" args={[PALETTE.black, 16, 40]} />
