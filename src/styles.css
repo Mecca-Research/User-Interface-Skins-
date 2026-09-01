@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+@source "./**/*.{ts,tsx}";
+@source "../pages/**/*.{html,tsx}";
+
 @theme {
   --color-bg: #05060a;
   --color-navy: #0b1730;
@@ -27,8 +30,14 @@
   }
 
   html,
-  body {
-    min-height: 100%;
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    height: 100dvh;
+    min-height: 100dvh;
+    margin: 0;
+    overflow: hidden;
     background: var(--color-bg);
     color: var(--color-fg);
   }

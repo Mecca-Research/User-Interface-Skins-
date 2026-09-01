@@ -28,7 +28,7 @@ export function NexusApp() {
       : "cursor-grab";
 
   return (
-    <main className="relative h-dvh w-full overflow-hidden bg-bg text-fg">
+    <main className="relative h-dvh min-h-dvh w-full overflow-hidden bg-bg text-fg">
       <div className={cn("absolute inset-0 z-0 isolate", cursor)}>
         {canvas ? (
           (() => {
