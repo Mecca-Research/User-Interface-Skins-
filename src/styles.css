@@ -67,7 +67,7 @@
 
 .window-orb {
   will-change: left, top, width, height, border-radius;
-  background: rgb(11 23 48 / 0.64);
+  background: rgb(11 23 48 / 0.5);
 }
 
 .window-chrome {
