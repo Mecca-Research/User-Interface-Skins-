@@ -267,7 +267,7 @@ function SphereBody({
       }
     }
 
-    if (!dragging.current && !openId) {
+    if (!dragging.current) {
       const decay = Math.exp(-3.6 * d);
       velX.current *= decay;
       velY.current *= decay;

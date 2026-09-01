@@ -46,11 +46,7 @@ function SizeSwitch() {
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-label="Sphere size"
-        onDoubleClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setOpen((v) => !v);
-        }}
+        onClick={() => setOpen((v) => !v)}
       >
         <p className="font-display text-sm tabular-nums tracking-tight text-fg">
           {size}
