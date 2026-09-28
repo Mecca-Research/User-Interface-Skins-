@@ -7,7 +7,7 @@ import tailwindcss from "@tailwindcss/vite";
 const root = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  base: "/User-Interface-Skins-/",
+  base: "/User-Interface-Skins-/network-sphere/",
   root: resolve(root, "pages"),
   publicDir: resolve(root, "public"),
   resolve: {

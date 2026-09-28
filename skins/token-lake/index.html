@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Token Lake</title>
+    <meta
+      name="description"
+      content="A receding lake of English script. A glass boat forms on the swell and the reply fades in."
+    />
+    <meta name="theme-color" content="#07090d" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Great+Vibes&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #07090d;
+        --fg: #e6ecef;
+        --muted: #8b969e;
+        --subtle: #5c6870;
+        --line: rgba(230, 236, 239, 0.14);
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
+      body { font-family: "Cormorant Garamond", Georgia, serif; overflow: hidden; }
+      button, input, textarea { font: inherit; }
+      button { cursor: pointer; }
+      canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+      .vignette {
+        position: fixed; inset: 0; pointer-events: none;
+        background:
+          radial-gradient(ellipse 70% 55% at 50% 32%, transparent 0%, rgb(7 9 13 / 0.08) 52%, rgb(7 9 13 / 0.72) 100%),
+          linear-gradient(to bottom, rgb(7 9 13 / 0.35), transparent 18%, transparent 62%, rgb(7 9 13 / 0.78));
+      }
+      .top {
+        position: fixed; z-index: 40; top: 0; left: 0; right: 0;
+        display: flex; justify-content: space-between; align-items: flex-start;
+        padding: 16px 18px;
+      }
+      .brand { font-style: italic; font-size: 1.35rem; line-height: 1; }
+      .brand small { display: block; margin-top: 4px; font-style: normal; font-size: 0.75rem; letter-spacing: 0.04em; color: var(--subtle); }
+      .skins, .clear {
+        color: var(--muted); text-decoration: none; background: rgba(18, 23, 29, 0.55);
+        border: 0; border-radius: 10px; padding: 10px 12px; backdrop-filter: blur(16px);
+      }
+      .empty {
+        position: fixed; z-index: 20; left: 0; right: 0; top: 18%;
+        text-align: center; pointer-events: none; padding: 0 24px;
+      }
+      .empty h1 { margin: 0; font-weight: 500; font-style: italic; font-size: clamp(1.8rem, 4vw, 2.4rem); }
+      .empty p { margin: 12px auto 0; max-width: 26rem; color: var(--muted); }
+      .dock { position: fixed; z-index: 40; left: 14px; top: 78px; display: flex; flex-direction: column; gap: 8px; }
+      .dock button {
+        max-width: 220px; height: 44px; text-align: left; padding: 0 12px;
+        border: 0; border-radius: 10px; color: var(--fg); background: rgba(18, 23, 29, 0.62);
+        backdrop-filter: blur(16px); box-shadow: 0 0 0 1px var(--line);
+      }
+      .composer {
+        position: fixed; z-index: 40; left: 0; right: 0; bottom: 0;
+        padding: 0 14px 18px; display: flex; justify-content: center;
+      }
+      form.ask {
+        width: min(560px, 100%);
+        display: flex; gap: 8px; align-items: flex-end;
+        padding: 8px; border-radius: 18px;
+        background: rgba(18, 23, 29, 0.78);
+        backdrop-filter: blur(22px);
+        box-shadow: 0 0 0 1px var(--line);
+      }
+      textarea {
+        flex: 1; resize: none; border: 0; background: transparent; color: var(--fg);
+        min-height: 44px; max-height: 120px; padding: 10px 12px; outline: none;
+      }
+      form.ask button, .send {
+        width: 44px; height: 44px; border: 0; border-radius: 12px;
+        background: #c8d4dc; color: #07090d;
+      }
+      form.ask button:disabled { opacity: 0.35; cursor: not-allowed; }
+      .flight {
+        position: fixed; z-index: 50; pointer-events: none; font-style: italic;
+        transform: translate(-50%, -20%); max-width: 24rem;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        transition: left 880ms cubic-bezier(0.22, 1, 0.36, 1), top 880ms cubic-bezier(0.22, 1, 0.36, 1), opacity 880ms, filter 880ms, transform 880ms;
+      }
+      .flight.sink { opacity: 0; filter: blur(10px); transform: translate(-50%, 0) scale(0.6); }
+      .boat {
+        position: fixed; z-index: 25;
+        animation: rise 6.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+        transform-origin: 50% 92%;
+      }
+      @keyframes rise {
+        0% { opacity: 0; filter: blur(16px); transform: translateY(78px) scale(0.48, 0.34); }
+        42% { opacity: 0.42; filter: blur(9px); transform: translateY(42px) scale(0.74, 0.58); }
+        100% { opacity: 1; filter: none; transform: none; }
+      }
+      .hull {
+        height: 100%; display: flex; flex-direction: column; overflow: hidden; border-radius: 18px;
+        background: rgba(18, 23, 29, 0.58); backdrop-filter: blur(22px);
+        box-shadow: 0 0 0 1px var(--line), 0 18px 50px -24px rgb(0 0 0 / 0.55);
+        transform-origin: 50% 92%;
+      }
+      .boat header {
+        height: 44px; display: flex; align-items: center; gap: 8px; padding: 0 8px 0 12px;
+        cursor: grab; user-select: none;
+      }
+      .boat header p { flex: 1; margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: italic; }
+      .icon {
+        width: 44px; height: 44px; border: 0; background: transparent; color: var(--muted); border-radius: 8px;
+      }
+      .follow {
+        margin: 0 12px 8px; display: flex; gap: 8px; align-items: center; height: 44px;
+        background: rgba(26, 33, 40, 0.7); border-radius: 12px; padding: 0 6px 0 10px;
+      }
+      .follow input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); outline: none; height: 40px; }
+      .follow button { width: 36px; height: 36px; border: 0; border-radius: 10px; background: #c8d4dc; color: #07090d; }
+      .follow button:disabled { opacity: 0.35; }
+      .scroll { flex: 1; min-height: 0; overflow: auto; padding: 4px 16px 28px; }
+      .who { margin: 0 0 4px; font-size: 0.75rem; letter-spacing: 0.04em; color: var(--subtle); }
+      .copy { margin: 0 0 14px; white-space: pre-wrap; line-height: 1.45; }
+      .fade { animation: fade 560ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+      @keyframes fade { from { opacity: 0; filter: blur(4px); transform: translateY(8px); } to { opacity: 1; filter: none; transform: none; } }
+      .resize {
+        position: absolute; right: 0; bottom: 0; width: 44px; height: 44px; border: 0; background: transparent; color: var(--subtle);
+        cursor: nwse-resize;
+      }
+      .shimmer { height: 10px; margin: 8px 0; border-radius: 4px; background: linear-gradient(100deg, transparent 20%, rgba(230,236,239,0.16) 50%, transparent 80%); background-size: 220% 100%; animation: sweep 1.8s linear infinite; }
+      @keyframes sweep { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+      @media (prefers-reduced-motion: reduce) {
+        .boat, .fade, .flight, .shimmer { animation: none; transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="lake"></canvas>
+    <div class="vignette"></div>
+    <div class="top">
+      <div class="brand">Token Lake<small>interface skin</small></div>
+      <div style="display:flex;gap:8px">
+        <a class="skins" href="/User-Interface-Skins-/">All skins</a>
+        <button class="clear" id="clear" type="button" hidden>Clear</button>
+      </div>
+    </div>
+    <div class="empty" id="empty">
+      <h1>Speak into the bed.</h1>
+      <p>Your words sink into the lake. A glass boat forms on the swell and keeps vibrating until the reply fades in.</p>
+    </div>
+    <div class="dock" id="dock"></div>
+    <div id="boats"></div>
+    <div class="composer">
+      <form class="ask" id="ask">
+        <label class="sr" for="q" style="position:absolute;left:-999px">Ask Token Lake</label>
+        <textarea id="q" rows="1" placeholder="Ask Token Lake"></textarea>
+        <button type="submit" id="send" disabled aria-label="Send">↑</button>
+      </form>
+    </div>
+    <script>
+      const LETTERS = "aceimnorsuvw";
+      const COLS = 14, ROWS = 16, Z_NEAR = 3.05, Z_FAR = 18.8, X_SPAN = 3.55, CAM_Y = 1.72, SPEED = 0.18;
+      const RISE_MS = 6400;
+      const canvas = document.getElementById("lake");
+      const ctx = canvas.getContext("2d", { alpha: false });
+      const boatsEl = document.getElementById("boats");
+      const dockEl = document.getElementById("dock");
+      const emptyEl = document.getElementById("empty");
+      const clearBtn = document.getElementById("clear");
+      const askForm = document.getElementById("ask");
+      const qEl = document.getElementById("q");
+      const sendBtn = document.getElementById("send");
+      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      let t = 0, amp = 0.16, targetAmp = 0.16, last = performance.now();
+      let fontReady = false;
+      const grid = Array(COLS * ROWS).fill("");
+      const ripples = [];
+      const boats = [];
+      let idn = 1;
+
+      document.fonts.load("56px 'Great Vibes'").then(() => { fontReady = true; }).catch(() => { fontReady = true; });
+
+      function hash(n) { const s = Math.sin(n * 127.1) * 43758.5453; return s - Math.floor(s); }
+      function word(seed) {
+        const len = 3 + Math.floor(hash(seed) * 3);
+        let out = "";
+        for (let i = 0; i < len; i++) out += LETTERS[Math.floor(hash(seed * 9 + i * 3.7) * LETTERS.length)];
+        return out;
+      }
+      function gap(c, r) { return (c + Math.floor(hash(r * 4.7) * 2)) % 3 === 2; }
+      function fill() {
+        for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) grid[r * COLS + c] = gap(c, r) ? "" : word(r * 19 + c * 3);
+      }
+      fill();
+      function wave(x, z, time, a) {
+        return Math.sin(z * 0.92 - time * SPEED) * a
+          + Math.sin(x * 0.78 + z * 0.22 + time * SPEED * 0.46) * a * 0.42
+          + Math.sin(x * 1.55 - z * 0.18 + time * SPEED * 0.72) * a * 0.14;
+      }
+      function rippleY(x, z, now) {
+        let y = 0;
+        for (const r of ripples) {
+          const age = (now - r.t0) / 1000;
+          if (age < 0 || age > 6) continue;
+          const dist = Math.hypot(x - r.x, z - r.z);
+          y += Math.exp(-((dist - age * 1.15) ** 2) / 0.85) * Math.exp(-age * 0.38) * 0.16;
+        }
+        return y;
+      }
+      function project(x, y, z, w, h) {
+        const s = (h * 0.9) / z;
+        return { sx: w * 0.5 + x * s, sy: h * 0.3 - (y - CAM_Y) * s, s };
+      }
+      function resize() {
+        const dpr = Math.min(devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(innerWidth * dpr);
+        canvas.height = Math.floor(innerHeight * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      addEventListener("resize", resize);
+      resize();
+
+      function surface(x, z, now) {
+        if (reduced) return 0;
+        return wave(x, z, t, amp) + rippleY(x, z, now);
+      }
+      function draw(now) {
+        const w = innerWidth, h = innerHeight;
+        ctx.fillStyle = "#07090d";
+        ctx.fillRect(0, 0, w, h);
+        const glow = ctx.createRadialGradient(w * 0.5, h * 0.3, 2, w * 0.5, h * 0.3, h * 0.62);
+        glow.addColorStop(0, "rgba(158,196,206,0.28)");
+        glow.addColorStop(0.45, "rgba(18,32,38,0.12)");
+        glow.addColorStop(1, "rgba(7,9,13,0)");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, w, h);
+        ctx.textAlign = "center";
+        ctx.textBaseline = "alphabetic";
+        const family = fontReady ? "'Great Vibes', cursive" : "Georgia, cursive";
+        for (let r = ROWS - 1; r >= 0; r--) {
+          const depth = r / (ROWS - 1);
+          const z = Z_NEAR + depth * (Z_FAR - Z_NEAR);
+          const near = 1 - depth * depth;
+          ctx.beginPath();
+          for (let s = 0; s <= 28; s++) {
+            const x = (s / 28 - 0.5) * X_SPAN * 2;
+            const p = project(x, surface(x, z, now), z, w, h);
+            if (s === 0) ctx.moveTo(p.sx, p.sy); else ctx.lineTo(p.sx, p.sy);
+          }
+          ctx.strokeStyle = `rgba(168,204,214,${(0.05 + near * 0.08).toFixed(3)})`;
+          ctx.lineWidth = 1 + near;
+          ctx.stroke();
+          const size = Math.max(14, Math.min(36, (h * 0.108) / z));
+          ctx.font = `${size.toFixed(1)}px ${family}`;
+          if ("letterSpacing" in ctx) ctx.letterSpacing = `${(-size * 0.08).toFixed(1)}px`;
+          for (let c = 0; c < COLS; c++) {
+            const text = grid[r * COLS + c];
+            if (!text) continue;
+            const x = ((c + 0.5) / COLS - 0.5) * X_SPAN * 2;
+            const p = project(x, surface(x, z, now), z, w, h);
+            ctx.fillStyle = `rgba(${Math.round(176 + near * 50)},${Math.round(196 + near * 36)},${Math.round(204 + near * 26)},${(0.22 + near * 0.62).toFixed(3)})`;
+            ctx.fillText(text, p.sx, p.sy);
+          }
+          if ("letterSpacing" in ctx) ctx.letterSpacing = "0px";
+        }
+        for (const rip of ripples) {
+          const age = (now - rip.t0) / 1000;
+          if (age < 0 || age > 6) continue;
+          const p = project(rip.x, surface(rip.x, rip.z, now), rip.z, w, h);
+          const radius = age * 1.15 * p.s;
+          ctx.beginPath();
+          ctx.ellipse(p.sx, p.sy, Math.max(1, radius), Math.max(1, radius * 0.22), 0, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(190,216,224,${(0.22 * Math.exp(-age * 0.4)).toFixed(3)})`;
+          ctx.stroke();
+        }
+      }
+      function frame(now) {
+        const dt = Math.min((now - last) / 1000, 0.1);
+        last = now;
+        t += dt;
+        amp += (targetAmp - amp) * (1 - Math.pow(0.0012, dt));
+        draw(now);
+        for (const boat of boats) {
+          if (boat.collapsed || boat.drag) continue;
+          const el = boat.hull;
+          if (!el) continue;
+          const buzz = boat.waiting && !reduced ? Math.sin(now * 0.0046) * 4.2 + Math.sin(now * 0.0094) * 1.7 : 0;
+          const tilt = boat.waiting && !reduced ? Math.sin(now * 0.0035) * 0.85 : Math.sin(t * 0.7 + boat.n) * 0.35;
+          const bob = (boat.waiting ? 1.2 : 0.6) * Math.sin(t * 0.8 + boat.n) * (4 + amp * 10) + buzz;
+          el.style.transform = `translateY(${bob.toFixed(2)}px) rotate(${tilt.toFixed(2)}deg)`;
+        }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+
+      function burst() {
+        targetAmp = 0.34;
+        ripples.push({ t0: performance.now(), x: 0, z: Z_NEAR + 1.2 });
+        setTimeout(() => {
+          if (!boats.some((b) => b.waiting)) targetAmp = 0.16;
+        }, RISE_MS + 400);
+      }
+
+      const KNOWN = {
+        "what is a fathom, really?": ["Six feet of water, or to understand fully.", "A fathom is six feet, the old measure of depth. A person with arms outstretched is about that span, which is why sailors used it for the water under the hull. The same word means to understand something all the way down."],
+        "explain vanishing points in one breath.": ["Parallel lines seem to meet at infinity.", "A vanishing point is where parallel lines would meet if you followed them far enough. The lake bed uses that same perspective: rows stay even in the world and crowd together as they near the horizon."],
+        "write a three-line lake poem.": ["Three lines, then the water.", "Letters lie down as weather.\nA question breaks the glass of the surface.\nThe answer floats back, still wet."]
+      };
+      function craft(prompt) {
+        const hit = KNOWN[prompt.toLowerCase()];
+        if (hit) return { title: hit[0], body: hit[1] };
+        const clean = prompt.replace(/\s+/g, " ").trim();
+        const title = clean.split(" ").slice(0, 7).join(" ");
+        return {
+          title: title.length > 42 ? title.slice(0, 40) + "…" : title,
+          body: `You asked about ${clean}.\n\nThis page is the Token Lake skin. The line sinks, the bed swells, and the boat keeps vibrating until the reply is allowed to appear. Drag the top bar, pull the corner, or send another question from the bottom to open a second boat.`
+        };
+      }
+
+      function layoutFor(index) {
+        const mobile = innerWidth < 640;
+        const w = mobile ? Math.round(innerWidth * 0.92) : Math.max(300, Math.min(Math.round(innerWidth * 0.34), 420));
+        const h = mobile ? Math.round(innerHeight * 0.42) : Math.max(250, Math.min(Math.round(innerHeight * 0.42), 360));
+        const x = mobile ? Math.round((innerWidth - w) / 2) : Math.round(innerWidth / 2 - w / 2 + ((index % 3) - 1) * 36);
+        const y = Math.max(64, Math.round(innerHeight * 0.16) + (index % 3) * 18);
+        return { x, y, w, h };
+      }
+
+      function paintBoat(boat) {
+        emptyEl.hidden = boats.length > 0;
+        clearBtn.hidden = boats.length === 0;
+        const el = document.createElement("article");
+        el.className = "boat";
+        el.style.left = boat.box.x + "px";
+        el.style.top = boat.box.y + "px";
+        el.style.width = boat.box.w + "px";
+        el.style.height = boat.box.h + "px";
+        el.innerHTML = `
+          <div class="hull">
+            <header>
+              <p></p>
+              <button class="icon" type="button" data-act="min" aria-label="Minimize">–</button>
+              <button class="icon" type="button" data-act="close" aria-label="Close">×</button>
+            </header>
+            <form class="follow">
+              <input placeholder="Continue in this boat" maxlength="2000" />
+              <button type="submit" disabled aria-label="Send follow-up">↑</button>
+            </form>
+            <div class="scroll"></div>
+            <button class="resize" type="button" aria-label="Resize"></button>
+          </div>`;
+        boat.el = el;
+        boat.hull = el.querySelector(".hull");
+        boat.titleEl = el.querySelector("header p");
+        boat.scrollEl = el.querySelector(".scroll");
+        boat.input = el.querySelector(".follow input");
+        boat.followBtn = el.querySelector(".follow button");
+        boatsEl.appendChild(el);
+        renderTurns(boat);
+        const header = el.querySelector("header");
+        header.addEventListener("pointerdown", (e) => {
+          if (e.target.closest("button")) return;
+          beginDrag(boat, e, "move");
+        });
+        el.querySelector(".resize").addEventListener("pointerdown", (e) => beginDrag(boat, e, "resize"));
+        el.querySelector("[data-act=min]").addEventListener("click", () => { boat.collapsed = true; el.remove(); sync(); });
+        el.querySelector("[data-act=close]").addEventListener("click", () => { boats.splice(boats.indexOf(boat), 1); el.remove(); sync(); });
+        el.querySelector(".follow").addEventListener("submit", (e) => {
+          e.preventDefault();
+          const text = boat.input.value.trim();
+          if (!text || boat.waiting) return;
+          boat.input.value = "";
+          boat.followBtn.disabled = true;
+          continueBoat(boat, text);
+        });
+        boat.input.addEventListener("input", () => { boat.followBtn.disabled = boat.waiting || !boat.input.value.trim(); });
+      }
+
+      function renderTurns(boat) {
+        boat.titleEl.textContent = boat.title;
+        boat.input.disabled = boat.waiting;
+        boat.followBtn.disabled = boat.waiting || !boat.input.value.trim();
+        if (boat.waiting && boat.turns.length < 2) {
+          boat.scrollEl.innerHTML = `<div class="shimmer"></div><div class="shimmer" style="width:80%"></div><p class="who">Forming on the water…</p>`;
+          return;
+        }
+        boat.scrollEl.innerHTML = boat.turns.map((turn) => {
+          if (turn.pending) return `<div class="shimmer"></div><div class="shimmer" style="width:70%"></div>`;
+          return `<div class="fade"><p class="who">${turn.role === "you" ? "You" : "Token Lake"}</p><p class="copy">${escapeHtml(turn.text)}</p></div>`;
+        }).join("");
+        boat.scrollEl.scrollTop = boat.scrollEl.scrollHeight;
+      }
+      function escapeHtml(s) { return s.replaceAll("&", "&").replaceAll("<", "<").replaceAll(">", ">"); }
+
+      function sync() {
+        dockEl.innerHTML = "";
+        for (const boat of boats.filter((b) => b.collapsed)) {
+          const tab = document.createElement("button");
+          tab.type = "button";
+          tab.textContent = boat.title;
+          tab.addEventListener("click", () => { boat.collapsed = false; paintBoat(boat); sync(); });
+          dockEl.appendChild(tab);
+        }
+        emptyEl.hidden = boats.length > 0;
+        clearBtn.hidden = boats.length === 0;
+        document.getElementById("starters")?.toggleAttribute("hidden", boats.length > 0);
+        targetAmp = boats.some((b) => b.waiting) ? 0.34 : 0.16;
+      }
+
+      function beginDrag(boat, e, kind) {
+        e.preventDefault();
+        const start = { x: e.clientX, y: e.clientY, ...boat.box };
+        boat.drag = true;
+        boat.hull.style.transform = "none";
+        const move = (ev) => {
+          if (ev.pointerId !== e.pointerId) return;
+          if (kind === "move") {
+            boat.box.x = Math.max(8, Math.min(innerWidth - 96, start.x + ev.clientX - start.x));
+            boat.box.y = Math.max(8, Math.min(innerHeight - 96, start.y + ev.clientY - start.y));
+          } else {
+            boat.box.w = Math.max(260, Math.min(innerWidth - 16, start.w + ev.clientX - start.x));
+            boat.box.h = Math.max(220, Math.min(innerHeight - 88, start.h + ev.clientY - start.y));
+          }
+          boat.el.style.left = boat.box.x + "px";
+          boat.el.style.top = boat.box.y + "px";
+          boat.el.style.width = boat.box.w + "px";
+          boat.el.style.height = boat.box.h + "px";
+        };
+        const up = (ev) => {
+          if (ev.pointerId !== e.pointerId) return;
+          boat.drag = false;
+          removeEventListener("pointermove", move, true);
+          removeEventListener("pointerup", up, true);
+        };
+        addEventListener("pointermove", move, true);
+        addEventListener("pointerup", up, true);
+      }
+
+      function fly(text, origin) {
+        const el = document.createElement("p");
+        el.className = "flight";
+        el.textContent = text;
+        el.style.left = origin.x + "px";
+        el.style.top = origin.y + "px";
+        document.body.appendChild(el);
+        requestAnimationFrame(() => {
+          el.classList.add("sink");
+          el.style.left = innerWidth * 0.5 + "px";
+          el.style.top = innerHeight * 0.7 + "px";
+        });
+        setTimeout(() => el.remove(), 980);
+      }
+
+      function spawn(text, origin) {
+        fly(text, origin);
+        const boat = {
+          n: idn++,
+          title: text.split(" ").slice(0, 5).join(" "),
+          turns: [{ role: "you", text }],
+          waiting: true,
+          collapsed: false,
+          box: layoutFor(boats.filter((b) => !b.collapsed).length),
+          drag: false
+        };
+        boats.push(boat);
+        sync();
+        setTimeout(() => { burst(); paintBoat(boat); }, 1100);
+        const reply = craft(text);
+        setTimeout(() => {
+          if (!boats.includes(boat)) return;
+          boat.waiting = false;
+          boat.title = reply.title;
+          boat.turns.push({ role: "lake", text: reply.body });
+          if (boat.el) renderTurns(boat);
+          sync();
+        }, 1100 + RISE_MS);
+      }
+
+      function continueBoat(boat, text) {
+        boat.waiting = true;
+        boat.turns.push({ role: "you", text }, { role: "lake", text: "", pending: true });
+        renderTurns(boat);
+        targetAmp = 0.28;
+        burst();
+        const reply = craft(text);
+        setTimeout(() => {
+          boat.waiting = false;
+          boat.turns.pop();
+          boat.turns.push({ role: "lake", text: reply.body });
+          if (boat.el) renderTurns(boat);
+          sync();
+        }, 1600);
+      }
+
+      qEl.addEventListener("input", () => {
+        sendBtn.disabled = !qEl.value.trim();
+        qEl.style.height = "auto";
+        qEl.style.height = Math.min(qEl.scrollHeight, 120) + "px";
+      });
+      askForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const text = qEl.value.trim();
+        if (!text) return;
+        const rect = askForm.getBoundingClientRect();
+        qEl.value = "";
+        sendBtn.disabled = true;
+        qEl.style.height = "auto";
+        spawn(text, { x: rect.left + rect.width / 2, y: rect.top });
+      });
+      qEl.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); askForm.requestSubmit(); }
+      });
+      clearBtn.addEventListener("click", () => {
+        boats.length = 0;
+        boatsEl.innerHTML = "";
+        sync();
+      });
+
+      for (const prompt of ["What is a fathom, really?", "Explain vanishing points in one breath.", "Write a three-line lake poem."]) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = prompt;
+        b.className = "skins";
+        b.style.margin = "0 4px 8px";
+        b.addEventListener("click", () => {
+          const rect = b.getBoundingClientRect();
+          document.getElementById("starters")?.remove();
+          spawn(prompt, { x: rect.left + rect.width / 2, y: rect.top });
+        });
+        let row = document.getElementById("starters");
+        if (!row) {
+          row = document.createElement("div");
+          row.id = "starters";
+          row.style.cssText = "position:fixed;z-index:40;left:0;right:0;bottom:84px;display:flex;justify-content:center;flex-wrap:wrap;padding:0 12px;";
+          document.body.appendChild(row);
+        }
+        row.appendChild(b);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+[
+  {
+    "id": "network-sphere",
+    "name": "Network Sphere",
+    "description": "A dark navy constellation of glass nodes on a rolling sphere. Turn the orb, open a node into a window, and keep a note on each one.",
+    "build": "npm run build:pages",
+    "output": ".output/public"
+  },
+  {
+    "id": "token-lake",
+    "name": "Token Lake",
+    "description": "A receding bed of English script. A question sinks into the water, a glass boat forms on the swell, and the reply fades in when the surface settles.",
+    "static": true
+  }
+]

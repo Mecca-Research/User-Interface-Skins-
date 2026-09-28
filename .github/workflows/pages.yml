@@ -23,8 +23,12 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-      - run: npm ci
-      - run: npm run build:pages
+          cache-dependency-path: skins/network-sphere/package-lock.json
+      - name: Install Network Sphere
+        working-directory: skins/network-sphere
+        run: npm ci
+      - name: Assemble gallery
+        run: node scripts/assemble-site.mjs
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
