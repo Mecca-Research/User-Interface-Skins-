@@ -7,9 +7,17 @@ export function Hud() {
   return (
     <div className="pointer-events-none absolute inset-0 z-10">
       <header className="flex items-start justify-between gap-4 p-5 sm:p-8">
-        <p className="hud-enter font-display text-2xl leading-none tracking-tight text-fg">
-          Workstation
-        </p>
+        <div>
+          <p className="hud-enter font-display text-2xl leading-none tracking-tight text-fg">
+            Network Sphere
+          </p>
+          <a
+            href="/User-Interface-Skins-/"
+            className="pointer-events-auto mt-2 inline-block text-xs tracking-wide text-muted"
+          >
+            All skins
+          </a>
+        </div>
         <SizeSwitch />
       </header>
     </div>

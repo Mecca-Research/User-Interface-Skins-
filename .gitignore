@@ -14,3 +14,5 @@ AGENTS.md
 .DS_Store
 .vite
 coverage
+skins/**/node_modules
+skins/**/.output
