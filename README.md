@@ -37,7 +37,8 @@ The published Token Lake page is the interface itself. Replies there are local, 
 
 If the skin needs a build, set `"build": "npm run build:pages"` and `"output": ".output/public"` instead of `"static": true`. Install its dependencies in the Pages workflow the same way Network Sphere is installed.
 
-3. Push to `main`. The site lists it and links to `./<id>/`.
+3. Push to `main`. Pages publishes the branch, so the workflow copies each skin to `/<id>/` at the site root (`./token-lake/`, `./network-sphere/`). Source stays in `skins/`. A missing path shows this gallery, not another skin.
+
 
 ## Run Network Sphere locally
 

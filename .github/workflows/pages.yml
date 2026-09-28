@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -29,6 +29,19 @@ jobs:
         run: npm ci
       - name: Assemble gallery
         run: node scripts/assemble-site.mjs
+      - name: Copy pages onto the branch
+        run: node scripts/publish-branch.mjs
+      - name: Commit published pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A index.html 404.html .nojekyll network-sphere token-lake
+          if git diff --cached --quiet; then
+            echo "Published pages already match."
+          else
+            git commit -m "Publish gallery pages [skip ci]"
+            git push || echo "Could not push published pages; the committed copy stays in place."
+          fi
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
